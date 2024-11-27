@@ -1,0 +1,12 @@
+{
+  "RABBITMQ_USERNAME": "user",
+  "RABBITMQ_PASSWORD": "password",
+  "RABBITMQ_HOST": "localhost",
+  "RABBITMQ_PORT": 5672,
+  "RABBITMQ_VHOST": "/",
+  "RABBITMQ_EXCHANGE": "amq.direct",
+  "RABBITMQ_QUEUE": "queue_name",
+  "DATA_FILE": "data.json",
+  "MODE": "dump",
+  "LIMIT_MESSAGES": 1
+}
