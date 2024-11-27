@@ -27,12 +27,7 @@ class rmq_tool():
     rmq_channel = object
 
     def __init__(self, config_path):
-        self.config['LIMIT_MESSAGES'] = 12
-        try:
-            config = self.__get_config(config_path)
-        except FileNotFoundError:
-            print(f'{config_path} not found')
-
+        config = self.__get_config(config_path)
         if self.__config_validate(config):
             self.__set_config(config)
         else:
@@ -45,7 +40,6 @@ class rmq_tool():
     def get_mode(self):
         return self.config['MODE']
 
-    @staticmethod
     def __config_validate(self, config):
         schema = {
             "type": "object",
@@ -77,11 +71,11 @@ class rmq_tool():
             print(e)
             return False
 
-    @staticmethod
-    def __get_config(self, config_path):
+    def __get_config(self: object, config_path: object) -> object:
         with open(config_path) as config_file:
             config = json.load(config_file)
             return config
+        return None
 
     def __set_config(self, config):
         self.config = {
@@ -123,11 +117,16 @@ class rmq_tool():
         except Exception as e:
             print(f"Произошла ошибка при обработке сообщения: {e}")
         self.counter += 1
-        if self.counter >= self.config['LIMIT_MESSAGES']:
-            ch.stop_consuming()
-            print(f"Получено {self.counter} сообщений. Остановка работы.")
-        else:
+        print(f'записано сообщений {self.counter}')
+
+        if self.config['LIMIT_MESSAGES'] == 0:
             ch.basic_ack(delivery_tag=method.delivery_tag)
+        else:
+            if self.counter >= self.config['LIMIT_MESSAGES']:
+                ch.stop_consuming()
+                print(f"Получено {self.counter} сообщений. Остановка работы.")
+            else:
+                ch.basic_ack(delivery_tag=method.delivery_tag)
 
     def mq_dump(self):
         self.__rmq_connection()
@@ -146,7 +145,7 @@ class rmq_tool():
             with open(self.config['DATA_FILE'], 'r') as file:
                 while True:
                     chunk = [json.loads(line.strip()) for line in file.readlines(self.config['CHUNK_SIZE'])]
-                    if not chunk or self.counter >= self.config['LIMIT_MESSAGES']:
+                    if not chunk or (self.counter >= self.config['LIMIT_MESSAGES'] != 0):
                         break
                     for message in chunk:
                         self.rmq_channel.basic_publish(exchange=self.config['RABBITMQ_EXCHANGE'],
