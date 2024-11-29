@@ -128,6 +128,13 @@ class rmq_tool():
             else:
                 ch.basic_ack(delivery_tag=method.delivery_tag)
 
+    def set_mode(self, mode):
+        if mode in ('dump', 'push'):
+            self.config['MODE'] = mode
+
+    def set_data_file(self, data_file):
+        self.config['DATA_FILE'] = data_file
+
     def mq_dump(self):
         self.__rmq_connection()
         self.rmq_channel.basic_consume(on_message_callback=self.__mq_process_message,
@@ -154,19 +161,40 @@ class rmq_tool():
                                                        )
                     self.counter += len(chunk)
                     print(
-                        f"Отправлено сообщений в очередь {self.config['RABBITMQ_QUEUE']}@{self.config['RABBITMQ_HOST']}: {self.counter} ")
+                        f"Отправлено сообщений в очередь {self.config['RABBITMQ_QUEUE']}@"
+                        f"{self.config['RABBITMQ_HOST']}: {self.counter} ")
 
         except Exception as e:
             print(f"Ошибка при чтении или отправке сообщения: {e}")
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="rmq_tool предназначена для работы с данными в rabbitmq")
-    parser.add_argument("-с", "--config", help="Путь к конфигурационному файлу", required=False, default="config.json")
+    parser = argparse.ArgumentParser(description='rmq_tool предназначена для работы с данными в rabbitmq')
+    parser.add_argument('-с', '--config',
+                        help='Путь к конфигурационному файлу',
+                        required=False,
+                        default='config.json'
+                        )
+    parser.add_argument('-m', '--mode',
+                        help='Переопределение режима работы. может быть быть dump или push',
+                        required=False
+                        )
+    parser.add_argument('-f', '--file',
+                        help='Переопределяет файл данных',
+                        required=False
+                        )
 
     args = parser.parse_args()
 
     mq_tool = rmq_tool(args.config)
+
+    if args.mode == 'dump':
+        mq_tool.set_mode('dump')
+    if args.mode == 'push':
+        mq_tool.set_mode('push')
+
+    if args.file:
+        mq_tool.set_data_file(args.file)
 
     if mq_tool.get_mode() == 'dump':
         mq_tool.mq_dump()
